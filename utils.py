@@ -9,8 +9,7 @@ class ConvertionException(Exception):
 
 class ValueConverter:
     @staticmethod
-    def get_price(quote: str, base: str, amount: float):
-
+    def convert(quote: str, base: str, amount: float):
         if quote == base:
             raise ConvertionException(f'Невозможно перевести одинаковые валюты {base}')
 
@@ -23,12 +22,19 @@ class ValueConverter:
             base_ticker = keys[base]
         except KeyError:
             raise ConvertionException(f'Не удалось обработать валюту {base}')
-
         try:
             amount = float(amount)
         except ValueError:
             raise ConvertionException(f'Не удалось обработать количество {amount}')
 
-        r = requests.get(f'https://api.apilayer.com/currency_data/live?base={quote_ticker}&symbols={base_ticker}')
-        total_base = json.loads(r.content)[keys[base]]
+        url = f"https://api.apilayer.com/fixer/convert?to={base_ticker}&from={quote_ticker}&amount={amount}"
+
+        payload = {}
+        headers = {
+            "apikey": "kSShf0UHdCczGrjNifzn7u1YKsHSFwQk"
+        }
+
+        response = requests.request("GET", url, headers=headers, data=payload)
+        total_base = json.loads(response.content)['result']
+
         return total_base
